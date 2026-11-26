@@ -1,0 +1,2044 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>语文学习助手 · 错题复盘与计划</title>
+<style>
+  :root {
+    --primary: #2b6cb0;
+    --primary-dark: #1a365d;
+    --accent: #ed8936;
+    --success: #38a169;
+    --danger: #e53e3e;
+    --bg: #f7fafc;
+    --card: #ffffff;
+    --border: #e2e8f0;
+    --text: #2d3748;
+    --text-light: #718096;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, 'Microsoft YaHei', 'PingFang SC', sans-serif;
+    background: var(--bg); color: var(--text);
+    min-height: 100vh; display: flex; flex-direction: column;
+  }
+  /* Header */
+  header {
+    background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+    color: #fff; padding: 18px 32px; display: flex; align-items: center;
+    justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  header h1 { font-size: 20px; font-weight: 600; letter-spacing: 1px; }
+  header .meta { font-size: 12px; opacity: 0.85; }
+  /* Nav */
+  nav {
+    display: flex; gap: 4px; background: var(--card);
+    padding: 0 32px; border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 10;
+  }
+  nav button {
+    padding: 14px 22px; border: none; background: none; cursor: pointer;
+    font-size: 14px; color: var(--text-light); font-weight: 500;
+    border-bottom: 3px solid transparent; transition: all .2s;
+  }
+  nav button:hover { color: var(--primary); }
+  nav button.active {
+    color: var(--primary); border-bottom-color: var(--primary);
+  }
+  /* Main */
+  main { flex: 1; padding: 28px 32px; max-width: 1200px; margin: 0 auto; width: 100%; }
+  section { display: none; animation: fadeIn .3s ease; }
+  section.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  /* Cards */
+  .card {
+    background: var(--card); border-radius: 10px; padding: 22px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06); border: 1px solid var(--border);
+    margin-bottom: 18px;
+  }
+  .card h2 { font-size: 16px; color: var(--primary-dark); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+  .card h3 { font-size: 14px; color: var(--text); margin-bottom: 10px; }
+  /* Stats */
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 20px; }
+  .stat-card {
+    background: linear-gradient(135deg, var(--primary), #4299e1); color: #fff;
+    border-radius: 10px; padding: 18px; text-align: center;
+  }
+  .stat-card.warn { background: linear-gradient(135deg, var(--accent), #ed64a6); }
+  .stat-card.danger { background: linear-gradient(135deg, var(--danger), #c53030); }
+  .stat-card.ok { background: linear-gradient(135deg, var(--success), #2f855a); }
+  .stat-num { font-size: 32px; font-weight: 700; }
+  .stat-label { font-size: 13px; opacity: 0.9; margin-top: 4px; }
+  /* Buttons */
+  .btn {
+    padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer;
+    font-size: 13px; font-weight: 500; transition: all .2s;
+  }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-outline {
+    background: transparent; border: 1px solid var(--primary); color: var(--primary);
+  }
+  .btn-outline:hover { background: var(--primary); color: #fff; }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-sm { padding: 4px 10px; font-size: 12px; }
+  .tag {
+    display: inline-block; padding: 2px 10px; border-radius: 12px;
+    font-size: 11px; font-weight: 500;
+  }
+  .tag-basic { background: #bee3f8; color: #2c5282; }
+  .tag-lit { background: #fefcbf; color: #975a16; }
+  .tag-poem { background: #c6f6d5; color: #22543d; }
+  .tag-classical { background: #e9d8fd; color: #553c9a; }
+  .tag-reading { background: #fed7d7; color: #9b2c2c; }
+  .tag-writing { background: #fed7aa; color: #9c4221; }
+  .tag-warn { background: #fed7d7; color: #c53030; }
+  .tag-ok { background: #c6f6d5; color: #2f855a; }
+  .tag-info { background: #bee3f8; color: #2b6cb0; }
+  /* Knowledge Tree */
+  .module { margin-bottom: 20px; }
+  .module-header {
+    background: var(--primary); color: #fff; padding: 12px 16px;
+    border-radius: 8px 8px 0 0; cursor: pointer;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .module-header h3 { color: #fff; margin: 0; font-size: 15px; }
+  .module-body {
+    border: 1px solid var(--border); border-top: none;
+    border-radius: 0 0 8px 8px; padding: 14px; background: #fff;
+  }
+  .topic {
+    padding: 10px 12px; border-left: 3px solid var(--primary);
+    background: #f7fafc; margin-bottom: 10px; border-radius: 4px;
+  }
+  .topic:last-child { margin-bottom: 0; }
+  .topic-title { font-weight: 600; font-size: 13px; margin-bottom: 4px; }
+  .topic-reason { font-size: 12px; color: var(--danger); margin-bottom: 4px; }
+  .topic-solutions { font-size: 12px; color: var(--text); line-height: 1.7; }
+  .topic-solutions li { margin-bottom: 2px; }
+  .topic-solutions a {
+    color: var(--primary); text-decoration: none; border-bottom: 1px dashed var(--primary);
+    transition: all .2s;
+  }
+  .topic-solutions a:hover {
+    color: var(--primary-dark); border-bottom-style: solid;
+    background: #ebf8ff; padding: 0 4px; border-radius: 3px;
+  }
+  .topic-solutions .res-icon { margin-right: 3px; }
+  /* Photo upload */
+  .photo-dropzone {
+    border: 2px dashed var(--border);
+    border-radius: 8px;
+    padding: 24px 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all .2s;
+    background: #fafbfc;
+  }
+  .photo-dropzone:hover { border-color: var(--primary); background: #ebf8ff; }
+  .photo-dropzone.dragover { border-color: var(--primary); background: #ebf8ff; transform: scale(1.02); }
+  .photo-item {
+    position: relative;
+    width: 80px; height: 80px;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    cursor: zoom-in;
+  }
+  .photo-item img { width: 100%; height: 100%; object-fit: cover; }
+  .photo-item .rm-btn {
+    position: absolute; top: 2px; right: 2px;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--danger); color: #fff; border: none;
+    font-size: 12px; cursor: pointer; line-height: 20px;
+  }
+  .exam-photo-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 8px; margin: 10px 0;
+  }
+  .exam-photo-grid .photo-item { width: 100%; height: 100px; }
+  /* Lightbox */
+  #photoLightbox {
+    position: fixed; inset: 0; background: rgba(0,0,0,.9);
+    display: none; z-index: 9999; align-items: center; justify-content: center;
+    cursor: zoom-out;
+  }
+  #photoLightbox.open { display: flex; }
+  #photoLightbox img { max-width: 92vw; max-height: 92vh; border-radius: 6px; }
+  #photoLightbox .close-btn {
+    position: absolute; top: 20px; right: 24px;
+    color: #fff; font-size: 28px; cursor: pointer;
+    background: none; border: none;
+  }
+  /* Form */
+  .form-group { margin-bottom: 14px; }
+  .form-group label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 5px; }
+  input, textarea, select {
+    width: 100%; padding: 9px 12px; border: 1px solid var(--border);
+    border-radius: 6px; font-size: 13px; font-family: inherit;
+    background: #fff; transition: border-color .2s;
+  }
+  input:focus, textarea:focus, select:focus {
+    outline: none; border-color: var(--primary);
+  }
+  textarea { resize: vertical; min-height: 70px; }
+  /* List items */
+  .list-item {
+    padding: 14px; border: 1px solid var(--border); border-radius: 8px;
+    margin-bottom: 10px; background: #fff;
+  }
+  .list-item-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+  .list-item-title { font-weight: 600; font-size: 14px; }
+  .list-item-body { font-size: 13px; color: var(--text-light); line-height: 1.6; }
+  .list-item-actions { display: flex; gap: 6px; margin-top: 10px; }
+  /* Progress */
+  .progress-bar { height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 4px; transition: width .3s; }
+  .progress-fill.low { background: var(--danger); }
+  .progress-fill.med { background: var(--accent); }
+  .progress-fill.high { background: var(--success); }
+  .progress-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .progress-row label { flex: 0 0 100px; font-size: 12px; }
+  .progress-row .progress-bar { flex: 1; }
+  .progress-row .pct { flex: 0 0 45px; text-align: right; font-size: 12px; font-weight: 600; }
+  /* 知识点掌握度分析 */
+  .mastery-summary { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+  .mastery-pill { font-size: 12px; padding: 6px 12px; border-radius: 20px; font-weight: 600; }
+  .mastery-pill b { font-size: 14px; margin-left: 2px; }
+  .mastery-pill.ok { background: #c6f6d5; color: #22543d; }
+  .mastery-pill.learning { background: #feebc8; color: #7b341e; }
+  .mastery-pill.weak { background: #fed7d7; color: #9b2c2c; }
+  .mastery-pill.none { background: #e2e8f0; color: #4a5568; }
+  .mastery-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px dashed var(--border); }
+  .mastery-row:last-child { border-bottom: none; }
+  .mastery-row .m-name { flex: 0 0 42%; display: flex; align-items: center; gap: 6px; min-width: 0; font-size: 12px; }
+  .mastery-row .m-name .topic-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mastery-row .m-bar { flex: 1; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden; }
+  .mastery-row .m-fill { height: 100%; border-radius: 4px; transition: width .3s; }
+  .mastery-row .m-fill.ok { background: var(--success); }
+  .mastery-row .m-fill.learning { background: var(--accent); }
+  .mastery-row .m-fill.weak { background: var(--danger); }
+  .mastery-row .m-fill.none { background: #cbd5e0; }
+  .mastery-row .m-pct { flex: 0 0 70px; text-align: right; font-size: 12px; font-weight: 600; }
+  .mastery-row .m-pct small { display: block; font-size: 10px; color: var(--text-light); font-weight: 400; }
+  .mastery-detail { margin-top: 12px; }
+  .mastery-detail summary { cursor: pointer; font-size: 12px; color: var(--text-light); padding: 6px 0; user-select: none; }
+  .mastery-detail summary:hover { color: var(--primary); }
+  /* Modal */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    display: none; align-items: center; justify-content: center; z-index: 100;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: #fff; border-radius: 12px; width: 90%; max-width: 560px;
+    max-height: 85vh; overflow-y: auto; padding: 24px;
+  }
+  .modal h2 { margin-bottom: 18px; }
+  /* Tabs inside sections */
+  .sub-tabs { display: flex; gap: 8px; margin-bottom: 18px; border-bottom: 2px solid var(--border); }
+  .sub-tabs button {
+    padding: 10px 18px; border: none; background: none; cursor: pointer;
+    font-size: 13px; color: var(--text-light); border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+  }
+  .sub-tabs button.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
+  /* Plan items */
+  .plan-date { font-size: 13px; font-weight: 600; color: var(--primary-dark); margin: 18px 0 10px; padding-bottom: 6px; border-bottom: 1px dashed var(--border); }
+  .plan-item {
+    display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px;
+    background: #fff; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 6px;
+  }
+  .plan-item input[type="checkbox"] { margin-top: 3px; width: auto; }
+  .plan-item.done { opacity: 0.55; text-decoration: line-through; }
+  .plan-item-text { flex: 1; font-size: 13px; }
+  .plan-item-tag { flex-shrink: 0; }
+  /* Parent view */
+  .parent-alert {
+    background: #fff5f5; border: 1px solid #fed7d7; border-radius: 8px;
+    padding: 14px; margin-bottom: 14px; font-size: 13px;
+  }
+  .parent-alert h4 { color: var(--danger); margin-bottom: 6px; }
+  .parent-tip {
+    background: #f0fff4; border: 1px solid #c6f6d5; border-radius: 8px;
+    padding: 14px; margin-bottom: 14px; font-size: 13px;
+  }
+  .parent-tip h4 { color: var(--success); margin-bottom: 6px; }
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--text-light); }
+  .empty-state .icon { font-size: 48px; margin-bottom: 10px; }
+  /* Top bar actions */
+  .top-actions { display: flex; gap: 8px; margin-left: auto; }
+  .hidden { display: none !important; }
+
+  /* ========================================================
+     响应式布局：平板（≤768px）& 手机（≤480px）
+     ======================================================== */
+  @media (max-width: 768px) {
+    header { padding: 12px 16px; }
+    header h1 { font-size: 17px; letter-spacing: 0; }
+    header .meta { font-size: 11px; }
+    nav { padding: 0 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+    nav::-webkit-scrollbar { display: none; }
+    nav button { padding: 12px 14px; font-size: 13px; white-space: nowrap; flex-shrink: 0; }
+    main { padding: 16px 14px; }
+    .card { padding: 16px; }
+    .stats { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .stat-card { padding: 14px 10px; }
+    .stat-num { font-size: 26px; }
+    .list-item-actions { flex-wrap: wrap; gap: 6px; }
+    .list-item-actions .btn { flex: 1 1 auto; min-width: 64px; text-align: center; }
+    .modal { width: 95%; padding: 18px; max-height: 90vh; }
+    .progress-row { flex-wrap: wrap; gap: 6px; }
+    .progress-row label { flex: 0 0 auto; min-width: 72px; }
+    .progress-row .progress-bar { flex: 1 1 100%; order: 3; }
+    .progress-row .pct { flex: 0 0 auto; }
+    .top-actions { flex-wrap: wrap; gap: 6px; }
+    .sub-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+    .sub-tabs::-webkit-scrollbar { display: none; }
+    .sub-tabs button { white-space: nowrap; flex-shrink: 0; }
+    .exam-photo-grid { grid-template-columns: repeat(auto-fill, minmax(75px, 1fr)); gap: 6px; }
+    /* 试卷编辑器：允许横向滚动 */
+    #examQuestionsEditor { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    #examQuestionsEditor > div { min-width: 380px; }
+  }
+
+  @media (max-width: 480px) {
+    header { padding: 10px 12px; flex-direction: column; align-items: stretch; gap: 8px; }
+    header h1 { font-size: 16px; text-align: center; }
+    header .meta { text-align: center; font-size: 11px; }
+    .top-actions { justify-content: center; margin-left: 0; }
+    main { padding: 12px 10px; }
+    .card { padding: 12px; margin-bottom: 12px; }
+    .card h2 { font-size: 15px; }
+    .stats { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .stat-card { padding: 12px 8px; }
+    .stat-num { font-size: 22px; }
+    .stat-label { font-size: 11px; }
+    .modal { width: 100%; padding: 14px; border-radius: 0; max-height: 94vh; margin: 0; max-width: 100% !important; }
+    .modal h2 { font-size: 16px; margin-bottom: 12px; }
+    .list-item { padding: 12px; }
+    .list-item-header { flex-direction: column; gap: 4px; align-items: flex-start; }
+    .list-item-actions .btn { flex: 1 1 calc(50% - 3px); }
+    .btn { padding: 9px 14px; font-size: 13px; }
+    .btn-sm { padding: 7px 10px; font-size: 12px; }
+    .topic { padding: 10px; }
+    .module-header { padding: 10px 12px; }
+    .module-body { padding: 10px; }
+    .progress-row label { font-size: 11px; min-width: 60px; }
+    #photoLightbox .close-btn { top: 12px; right: 14px; font-size: 24px; }
+    .form-group { margin-bottom: 12px; }
+    /* 防止 iOS 点击输入框时自动放大页面：字号 ≥16px */
+    input, textarea, select { font-size: 16px; }
+    .photo-dropzone { padding: 18px 8px; }
+    .photo-item { width: 70px; height: 70px; }
+    #examQuestionsEditor > div {
+      min-width: 360px;
+      grid-template-columns: 56px 1fr 56px 56px 28px !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📚 语文学习助手</h1>
+  <div class="meta">错题复盘 · 学习计划 · 家长跟进</div>
+</header>
+
+<nav id="mainNav">
+  <button data-section="dashboard" class="active">📊 总览</button>
+  <button data-section="exam">📝 试卷库</button>
+  <button data-section="knowledge">📖 知识库</button>
+  <button data-section="mistakes">✏️ 错题复盘</button>
+  <button data-section="plan">🗓️ 学习计划</button>
+  <button data-section="parent">👨‍👩‍👧 家长视图</button>
+</nav>
+
+<main>
+  <!-- ===== 总览 ===== -->
+  <section id="section-dashboard" class="active">
+    <div class="stats" id="statsRow">
+      <div class="stat-card ok">
+        <div class="stat-num" id="statTopics">0</div>
+        <div class="stat-label">知识点</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="statMistakes">0</div>
+        <div class="stat-label">错题总数</div>
+      </div>
+      <div class="stat-card warn">
+        <div class="stat-num" id="statWeak">0</div>
+        <div class="stat-label">薄弱模块</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="statToday">0</div>
+        <div class="stat-label">今日待办</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📈 模块掌握度</h2>
+      <div id="moduleProgress"></div>
+    </div>
+
+    <div class="card">
+      <h2>🎯 知识点掌握度分析</h2>
+      <p style="font-size:12px;color:var(--text-light);margin-bottom:12px;line-height:1.6;">
+        综合<b>试卷得分</b>与<b>错题复盘状态</b>，逐个知识点评估掌握程度，薄弱项排在前面。
+      </p>
+      <div id="topicMastery"></div>
+    </div>
+
+    <div class="card">
+      <h2>🔥 最近错题</h2>
+      <div id="recentMistakes"></div>
+    </div>
+
+    <div class="card">
+      <h2>💡 今日学习建议</h2>
+      <div id="todayTips"></div>
+    </div>
+
+    <div class="card">
+      <h2>📦 数据管理（电脑 ↔ 手机同步）</h2>
+      <p style="font-size:12px;color:var(--text-light);margin-bottom:10px;line-height:1.6;">
+        数据保存在当前浏览器，不会自动同步到其他设备。要在手机上查看电脑录入的试卷/错题，请先在电脑<b>导出</b>数据文件，再传到手机后<b>导入</b>。
+      </p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="exportData()">⬇️ 导出全部数据</button>
+        <button class="btn btn-outline" onclick="document.getElementById('importFileInput').click()">⬆️ 导入数据</button>
+        <button class="btn btn-danger" onclick="clearAllData()">🗑️ 清空所有数据</button>
+        <input type="file" id="importFileInput" accept=".json,application/json" style="display:none" onchange="importData(this.files)">
+      </div>
+      <div id="importStatus" style="margin-top:10px;font-size:12px;"></div>
+    </div>
+  </section>
+
+  <!-- ===== 知识库 ===== -->
+  <section id="section-knowledge">
+    <div class="card">
+      <h2>📖 语文知识点体系（期中大纲）</h2>
+      <p style="font-size:13px;color:var(--text-light);margin-bottom:14px;">
+        本知识库基于期中错题分析大纲建立。每个知识点包含常见错因与对应解决办法。
+        点击模块标题可折叠/展开。
+      </p>
+      <div id="knowledgeTree"></div>
+    </div>
+  </section>
+
+  <!-- ===== 错题复盘 ===== -->
+  <section id="section-mistakes">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <h2 style="margin:0;">✏️ 错题复盘</h2>
+        <button class="btn btn-primary" onclick="openMistakeModal()">+ 录入错题</button>
+      </div>
+      <div id="mistakeList"></div>
+    </div>
+  </section>
+
+  <!-- ===== 学习计划 ===== -->
+  <section id="section-plan">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <h2 style="margin:0;">🗓️ 学习计划</h2>
+        <div>
+          <button class="btn btn-outline" onclick="generatePlan()">🔄 重新生成</button>
+          <button class="btn btn-primary" onclick="manualAddPlan()">+ 添加任务</button>
+        </div>
+      </div>
+      <div id="planList"></div>
+    </div>
+  </section>
+
+  <!-- ===== 家长视图 ===== -->
+  <section id="section-parent">
+    <div class="card">
+      <h2>👨‍👩‍👧 孩子学习状况报告</h2>
+      <p style="font-size:13px;color:var(--text-light);margin-bottom:14px;">
+        此视图帮助家长快速了解孩子当前的薄弱环节、每日学习完成度和需要关注的问题。
+      </p>
+
+      <h3 style="margin-top:20px;margin-bottom:10px;color:var(--danger);">⚠️ 需要关注</h3>
+      <div id="parentAlerts"></div>
+
+      <h3 style="margin-top:20px;margin-bottom:10px;color:var(--success);">👍 做得好的地方</h3>
+      <div id="parentGoods"></div>
+
+      <h3 style="margin-top:20px;margin-bottom:10px;">📊 各模块错题分布</h3>
+      <div id="parentDistribution"></div>
+
+      <h3 style="margin-top:20px;margin-bottom:10px;">📅 本周学习完成情况</h3>
+      <div id="parentWeekly"></div>
+    </div>
+  </section>
+
+  <!-- ===== 试卷库 ===== -->
+  <section id="section-exam">
+    <div id="examListView">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <h2 style="margin:0;">📝 试卷库</h2>
+          <button class="btn btn-primary" onclick="openExamModal()">+ 录入新试卷</button>
+        </div>
+        <div id="examList"></div>
+      </div>
+    </div>
+
+    <div id="examDetailView" class="hidden">
+      <div style="margin-bottom:14px;">
+        <button class="btn btn-outline" onclick="showExamList()">← 返回试卷库</button>
+      </div>
+      <div class="card" id="examDetailCard"></div>
+    </div>
+  </section>
+</main>
+
+<!-- 图片预览灯箱 -->
+<div id="photoLightbox" onclick="this.classList.remove('open')">
+  <button class="close-btn" onclick="this.parentElement.classList.remove('open')">×</button>
+  <img id="lightboxImg" src="" alt="">
+</div>
+
+<!-- ===== 错题录入弹窗 ===== -->
+<div class="modal-overlay" id="mistakeModal">
+  <div class="modal">
+    <h2 id="mistakeModalTitle">录入错题</h2>
+    <input type="hidden" id="editMistakeId">
+
+    <div class="form-group">
+      <label>所属模块</label>
+      <select id="mModule"></select>
+    </div>
+    <div class="form-group">
+      <label>具体知识点</label>
+      <select id="mTopic"></select>
+    </div>
+    <div class="form-group">
+      <label>题目来源（如：期中第3题、单元测试）</label>
+      <input type="text" id="mSource" placeholder="例：期中试卷 第3题">
+    </div>
+    <div class="form-group">
+      <label>错误原因</label>
+      <input type="text" id="mReason" placeholder="自动匹配或自定义">
+    </div>
+    <div class="form-group">
+      <label>错题内容/题干</label>
+      <textarea id="mContent" placeholder="请简述题目或拍照后记录..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>正确答案 / 自己的反思</label>
+      <textarea id="mReflection" placeholder="写下正确解法和这次错在哪..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>掌握状态</label>
+      <select id="mStatus">
+        <option value="weak">❌ 还没掌握</option>
+        <option value="learning" selected>🔄 学习中</option>
+        <option value="ok">✅ 已掌握</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>📷 题目照片（可选，拍下题干方便回顾）</label>
+      <div id="mistakePhotoUpload">
+        <div class="photo-dropzone" onclick="document.getElementById('mistakePhotoInput').click()">📷 点击或拖拽图片上传题目特写</div>
+        <input type="file" id="mistakePhotoInput" accept="image/*" multiple style="display:none" onchange="addMistakePhotos(this.files)">
+      </div>
+      <div id="mistakePhotoPreview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;"></div>
+    </div>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+      <button class="btn btn-outline" onclick="closeMistakeModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveMistake()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 手动添加计划 ===== -->
+<div class="modal-overlay" id="planModal">
+  <div class="modal">
+    <h2>添加学习任务</h2>
+    <div class="form-group">
+      <label>任务内容</label>
+      <input type="text" id="pTask" placeholder="例：背诵古诗中心思想">
+    </div>
+    <div class="form-group">
+      <label>所属模块</label>
+      <select id="pModule"></select>
+    </div>
+    <div class="form-group">
+      <label>截止日期</label>
+      <input type="date" id="pDate">
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+      <button class="btn btn-outline" onclick="closePlanModal()">取消</button>
+      <button class="btn btn-primary" onclick="savePlan()">添加</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 试卷录入弹窗 ===== -->
+<div class="modal-overlay" id="examModal">
+  <div class="modal" style="max-width:720px;">
+    <h2 id="examModalTitle">录入新试卷</h2>
+    <input type="hidden" id="editExamId">
+
+    <div class="form-group">
+      <label>试卷名称</label>
+      <input type="text" id="eName" placeholder="例：七上语文期中考试">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+      <div class="form-group" style="margin-bottom:0;">
+        <label>考试日期</label>
+        <input type="date" id="eDate">
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label>满分</label>
+        <input type="number" id="eFullScore" value="100">
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label>年级</label>
+        <select id="eGrade">
+          <option>七年级上</option><option>七年级下</option>
+          <option>八年级上</option><option>八年级下</option>
+          <option>九年级上</option><option>九年级下</option>
+          <option>其他</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-top:16px;">
+      <label>逐题录入（题号 | 所属知识点 | 满分 | 我的得分）</label>
+      <div id="examQuestionsEditor" style="background:#f7fafc;border:1px solid var(--border);border-radius:6px;padding:12px;max-height:340px;overflow-y:auto;">
+      </div>
+      <div style="margin-top:8px;display:flex;gap:8px;">
+        <button class="btn btn-sm btn-outline" onclick="addExamQuestion()">+ 添加一题</button>
+        <button class="btn btn-sm btn-outline" onclick="autoFillExamQuestions()">⚡ 按大纲批量导入</button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>📷 试卷照片（可上传多张，本地保存）</label>
+      <div id="examPhotoUpload">
+        <div class="photo-dropzone" onclick="document.getElementById('examPhotoInput').click()">
+          <div style="font-size:28px;">📷</div>
+          <div style="font-size:13px;color:var(--text);">点击或拖拽图片到这里上传</div>
+          <div style="font-size:11px;color:var(--text-light);">支持 JPG / PNG · 建议每张不超过 2MB</div>
+        </div>
+        <input type="file" id="examPhotoInput" accept="image/*" multiple style="display:none" onchange="addExamPhotos(this.files)">
+      </div>
+      <div id="examPhotoPreview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;"></div>
+    </div>
+
+    <div class="form-group">
+      <label>备注（作文题、整体感想等）</label>
+      <textarea id="eNotes" placeholder="作文题目、考试感受、老师评语..."></textarea>
+    </div>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
+      <button class="btn btn-outline" onclick="closeExamModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveExam()">保存试卷</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============== 知识库（来自期中PDF大纲） ============== */
+const KNOWLEDGE = [
+  {
+    id: 'basic', name: '基础知识', color: 'basic',
+    topics: [
+      { id: 'basic-1', qType: '1 字音字形', reason: '知识点疏漏',
+        solutions: [
+          '背诵 <span class="res-icon">📄</span><a href="resources/字音挑错100.pdf" target="_blank">《字音挑错100》</a>',
+          '考前自己查询一遍 <span class="res-icon">📄</span><a href="resources/多音字辨析.pdf" target="_blank">《多音字辨析》</a>',
+          '全面快速筛选一遍 <span class="res-icon">📄</span><a href="resources/789年级全部字音字形合辑.pdf" target="_blank">《789年级全部字音字形合辑》</a>'
+        ] },
+      { id: 'basic-2', qType: '2 选词填空', reason: '技巧生疏',
+        solutions: [
+          '听11.17日周二网课、在笔记纸上写下5个方法（组词带入、近义词代入、对象搭配、程度深浅、迁移生活）',
+          '需要刷题 <span class="res-icon">📄</span><a href="resources/基础002-选词填空.pdf" target="_blank">《基础002——答案（选词填空）》</a>，并整理笔记',
+          '方法样本 <span class="res-icon">📄</span><a href="resources/选词填空积累本样本.pdf" target="_blank">《选词填空积累本样本》</a>（记录样本、揣测词语态度）'
+        ] },
+      { id: 'basic-3', qType: '3 语法', reason: '知识点疏漏',
+        solutions: [
+          '听9.8日、11.17日语法课，把课程PPT里的知识点过一遍，把不会的记录在笔记本上：<span class="res-icon">📄</span><a href="resources/语法-短语结构类型课件.pdf" target="_blank">《短语结构类型课件》</a> <span class="res-icon">📄</span><a href="resources/语法-汉语词性分类.pdf" target="_blank">《汉语词性分类》</a> <span class="res-icon">📄</span><a href="resources/语法-句子成分分析法.pdf" target="_blank">《句子成分分析法》</a>',
+          '翻阅一遍教材，明确出题范围：教材后的小方框 <span class="res-icon">📄</span><a href="resources/语法-教材全版2026秋-第1册.pdf" target="_blank">《教材全版 第1册（1–255页）》</a> <span class="res-icon">📄</span><a href="resources/语法-教材全版2026秋-第2册.pdf" target="_blank">《第2册（256–510页）》</a> <span class="res-icon">📄</span><a href="resources/语法-教材全版2026秋-第3册.pdf" target="_blank">《第3册（511–765页）》</a> <span class="res-icon">📄</span><a href="resources/语法-教材全版2026秋-第4册.pdf" target="_blank">《第4册（766–1020页）》</a>',
+          '需要刷题 <span class="res-icon">📄</span><a href="resources/基础005-语法.pdf" target="_blank">《基础005——答案（语法）》</a>'
+        ] },
+      { id: 'basic-4', qType: '4 文学常识', reason: '知识点疏漏',
+        solutions: [
+          '建议筛查一遍书下注解，期末考试只考上册书"书下注释"（包含作家作品、文化常识）',
+          '时间不充裕看郑老师整理的 <span class="res-icon">📄</span><a href="resources/文常-789黑白表.pdf" target="_blank">《789文常"黑白"表》</a>',
+          '需要刷题 <span class="res-icon">📄</span><a href="resources/文常-基础006答案.pdf" target="_blank">《基础006——文常答案》</a>'
+        ] },
+    ]
+  },
+  {
+    id: 'lit', name: '名著阅读', color: 'lit',
+    topics: [
+      { id: 'lit-1', qType: '5 名著选择', reason: '知识点疏漏',
+        solutions: [
+          '建议浏览并筛选一遍教材，记录关键词（如"回忆性散文""个人生活""幼年到青年"）',
+          '教材定位：《朝花夕拾》78页、《西游记》161页、《红星照耀中国》417页、《红岩》466页、《简爱》794页、《唐诗三百首》847页',
+          '辅助资料：<span class="res-icon">📄</span><a href="resources/朝花夕拾-批注版.pdf" target="_blank">《朝花夕拾》郑老师批注</a> <span class="res-icon">📄</span><a href="resources/西游考点+线路图.pdf" target="_blank">《西游考点+线路图》</a> <span class="res-icon">📄</span><a href="resources/简爱-背诵全梗概.pdf" target="_blank">《简爱背诵全梗概》</a> <span class="res-icon">📄</span><a href="resources/红星照耀中国.pdf" target="_blank">《红星导读》</a>'
+        ] },
+      { id: 'lit-2', qType: '6 名著简答', reason: '知识点疏漏',
+        solutions: [
+          '熟练背诵"人物形象"和"故事情节"：《朝花夕拾》9.15/9.22、《简爱》9.29、《红星照耀中国》10.13、《西游记》11.3',
+          '需要背诵 <span class="res-icon">📄</span><a href="resources/名著-人物情节一张纸.pdf" target="_blank">《人物+情节等（一张纸）》</a>（含《简爱》《西游记》）',
+          '辅助背诵单：<span class="res-icon">📄</span><a href="resources/鲁迅-朝花夕拾背诵单.pdf" target="_blank">《鲁迅-朝花夕拾背诵单》</a> <span class="res-icon">📄</span><a href="resources/名著-红星背诵单-七上.pdf" target="_blank">《红星照耀中国背诵单》</a>'
+        ] },
+    ]
+  },
+  {
+    id: 'poem', name: '古诗文', color: 'poem',
+    topics: [
+      { id: 'poem-1', qType: '7 古诗默写（1）—（4）', reason: '书写不准确',
+        solutions: [
+          '父母听写"错别字"',
+          '<span class="res-icon">📄</span><a href="resources/古诗背诵-新课标有红点.pdf" target="_blank">《古诗背诵（新课标）有红点》（更新版）</a>'
+        ] },
+      { id: 'poem-2', qType: '8 理解性默写（5）', reason: '中心思想没掌握',
+        solutions: [
+          '背诵古诗的中心思想（期末只考上册书课内古诗）',
+          '<span class="res-icon">📄</span><a href="resources/古诗思想感情总结-填空表.pdf" target="_blank">《古诗思想感情总结（填空表）》</a>',
+          '详细读一遍郑老师汇总的每首诗分析 <span class="res-icon">📄</span><a href="resources/古诗-中考83首详细分析.pdf" target="_blank">《中考83首古诗详细分析》</a>'
+        ] },
+      { id: 'poem-3', qType: '9 诗歌对比选择（课内古诗错）', reason: '知识点不扎实',
+        solutions: [
+          '听课10.27日晚"唐诗鉴赏"',
+          '背诵"生平""情感""典故""手法" <span class="res-icon">📄</span><a href="resources/古诗-中考83首详细分析.pdf" target="_blank">《中考83首古诗详细分析》</a> <span class="res-icon">📄</span><a href="resources/诗歌对比-唐诗鉴赏.pdf" target="_blank">《唐诗鉴赏（陈子昂/李贺）》</a>',
+          '模仿郑老师方法进行自主学习，<span class="res-icon">📄</span><a href="resources/古诗鉴赏选择技巧.pdf" target="_blank">《古诗鉴赏选择技巧》</a>'
+        ] },
+      { id: 'poem-4', qType: '9 诗歌对比选择（课外古诗错）', reason: '应试能力不够',
+        solutions: [
+          '需要刷题，不许查询资料，仅根据题中所得现场判断选项是否正确',
+          '<span class="res-icon">📄</span><a href="resources/诗歌对比-诗歌鉴赏60题.pdf" target="_blank">《诗歌鉴赏（60题）》</a>'
+        ] },
+    ]
+  },
+  {
+    id: 'classical', name: '文言文', color: 'classical',
+    topics: [
+      { id: 'classical-1', qType: '10 文言文选择题', reason: '知识点疏漏',
+        solutions: [
+          '做class in里的测试卷，判定现在自己掌握率，并刷到满分。涵盖：一词多义、虚词、古今异义、通假字',
+          '自查自纠"课内"文言文词语考点 <span class="res-icon">📄</span><a href="resources/文言文-上册飘红背诵原句.pdf" target="_blank">《上册书飘红 文言文背诵原句》</a>',
+          '翻译资料：<span class="res-icon">📄</span><a href="resources/文言文-7年级上翻译.pdf" target="_blank">《7年级上所有文言文翻译》</a> <span class="res-icon">📄</span><a href="resources/文言文-8年级上翻译.pdf" target="_blank">《8年级上所有文言文翻译》</a> <span class="res-icon">📄</span><a href="resources/文言文-9年级上翻译.pdf" target="_blank">《9年级上所有文言文翻译》</a>'
+        ] },
+      { id: 'classical-2', qType: '11（1） 文言文课内翻译', reason: '背诵不过关',
+        solutions: [
+          '<span class="res-icon">📄</span><a href="resources/文言文-上册飘红背诵原句.pdf" target="_blank">《上册书飘红 文言文背诵原句》</a>',
+          '要保证精准背诵：先确定"得分点"，再"重复记忆"'
+        ] },
+      { id: 'classical-3', qType: '11（2） 文言文课外翻译', reason: '经验不足',
+        solutions: [
+          '需要集中刷题 <span class="res-icon">📄</span><a href="resources/文言文专项-7年级.pdf" target="_blank">《7年级文言文专项》</a> <span class="res-icon">📄</span><a href="resources/文言文专项-8年级.pdf" target="_blank">《8年级文言文专项》</a>',
+          '培养"猜词"能力、养成"预判得分点"的做题习惯',
+          '必须"打草稿"'
+        ] },
+      { id: 'classical-4', qType: '13 断句', reason: '技巧生疏',
+        solutions: [
+          '技巧：加"。"加"；"',
+          '需要集中刷题 <span class="res-icon">📄</span><a href="resources/文言文专项-7年级.pdf" target="_blank">《7年级文言文专项》</a>'
+        ] },
+      { id: 'classical-5', qType: '14 文意理解', reason: '答题状态不佳',
+        solutions: [
+          '本题不涉及知识点，只需要"审题""定位""抓虫子"',
+          '需要集中刷题 <span class="res-icon">📄</span><a href="resources/文言文专项-8年级.pdf" target="_blank">《8年级文言文专项》</a>'
+        ] },
+    ]
+  },
+  {
+    id: 'reading', name: '现代文阅读', color: 'reading',
+    topics: [
+      { id: 'reading-1', qType: '15 非连续文本', reason: '答题习惯不好 / 耐心细心不够',
+        solutions: [
+          '牢记"自问自答,逐一排查"，可以对线批注做题',
+          '审题必须仔细，考场必要时第一题先做题找手感',
+          '<span class="res-icon">📄</span><a href="resources/非连续文本-答案.pdf" target="_blank">《初中非连续文本阅读答案》</a>'
+        ] },
+      /* —— 散文阅读 5 个独立知识点 —— */
+      { id: 'reading-2a', qType: '16 散文阅读·筛选整合题', reason: '口诀不会',
+        solutions: [
+          '需要集中刷 <span class="res-icon">📄</span><a href="resources/散文-作用题新新新.pdf" target="_blank">《刷答案用作用题（新新新）答案》</a>'
+        ] },
+      { id: 'reading-2b', qType: '17 散文阅读·鉴赏题', reason: '口诀不清晰',
+        solutions: [
+          '需要集中刷 <span class="res-icon">📄</span><a href="resources/散文-作用题新新新.pdf" target="_blank">《刷答案用作用题（新新新）答案》</a>'
+        ] },
+      { id: 'reading-2c', qType: '18 散文阅读·作用题', reason: '口诀没运用',
+        solutions: [
+          '作用题 <span class="res-icon">📄</span><a href="resources/散文-作用题新新新.pdf" target="_blank">《刷答案用作用题（新新新）答案》</a>'
+        ] },
+      { id: 'reading-2d', qType: '19 散文阅读·福尔摩斯题', reason: '口诀没运用',
+        solutions: [
+          '福尔摩斯题（提示理解类）<span class="res-icon">📄</span><a href="resources/散文-作用题新新新.pdf" target="_blank">《刷答案用作用题（新新新）答案》</a>'
+        ] },
+      { id: 'reading-2e', qType: '20 散文阅读·理解题', reason: '口诀没运用',
+        solutions: [
+          '理解题 <span class="res-icon">📄</span><a href="resources/散文-作用题新新新.pdf" target="_blank">《刷答案用作用题（新新新）答案》</a>'
+        ] },
+      /* —— 说明文阅读 4 个独立知识点 —— */
+      { id: 'reading-3a', qType: '21 说明文·筛选整合题', reason: '口诀不会',
+        solutions: [
+          '<span class="res-icon">📄</span><a href="resources/说明文总复习册.pdf" target="_blank">《说明文总复习（册）》</a>'
+        ] },
+      { id: 'reading-3b', qType: '22 说明文·说明方法的作用', reason: '口诀不清晰',
+        solutions: [
+          '<span class="res-icon">📄</span><a href="resources/说明文总复习册.pdf" target="_blank">《说明文总复习（册）》</a>'
+        ] },
+      { id: 'reading-3c', qType: '23 说明文·语言的准确性', reason: '口诀没运用',
+        solutions: [
+          '<span class="res-icon">📄</span><a href="resources/说明文总复习册.pdf" target="_blank">《说明文总复习（册）》</a>'
+        ] },
+      { id: 'reading-3d', qType: '24 说明文·说明顺序', reason: '口诀不会',
+        solutions: [
+          '<span class="res-icon">📄</span><a href="resources/说明顺序15篇.pdf" target="_blank">《说明顺序15篇》</a>',
+          '<span class="res-icon">📄</span><a href="resources/说明文总复习册.pdf" target="_blank">《说明文总复习（册）》</a>'
+        ] },
+      /* —— 议论文阅读 4 个独立知识点 —— */
+      { id: 'reading-4a', qType: '25 议论文·论证思路+中心论点+分论点', reason: '口诀不会',
+        solutions: [
+          '<span class="res-icon">📄</span><a href="resources/议论文总复习册.pdf" target="_blank">《议论文总复习（册）》</a>'
+        ] },
+      { id: 'reading-4b', qType: '26 议论文·论证方法的作用', reason: '口诀不清晰',
+        solutions: [
+          '<span class="res-icon">📄</span><a href="resources/议论文总复习册.pdf" target="_blank">《议论文总复习（册）》</a>'
+        ] },
+      { id: 'reading-4c', qType: '27 议论文·配对题', reason: '口诀没运用',
+        solutions: [
+          '魔方案刷题',
+          '<span class="res-icon">📄</span><a href="resources/议论文总复习册.pdf" target="_blank">《议论文总复习（册）》</a>'
+        ] },
+      { id: 'reading-4d', qType: '28 议论文·实际应用题', reason: '口诀没运用',
+        solutions: [
+          '<span class="res-icon">📄</span><a href="resources/议论文总复习册.pdf" target="_blank">《议论文总复习（册）》</a>'
+        ] },
+    ]
+  },
+  {
+    id: 'writing', name: '写作', color: 'writing',
+    topics: [
+      { id: 'writing-1', qType: '29 记叙文写作·审题', reason: '审题不清',
+        solutions: [
+          '审题非常关键，50篇作文题目训练',
+          '<span class="res-icon">📄</span><a href="resources/写作审题-50篇.pdf" target="_blank">《写作审题-50篇》</a>'
+        ] },
+      { id: 'writing-2', qType: '30 记叙文写作·逻辑过渡/硬性迁移', reason: '硬性迁移 / 逻辑过渡',
+        solutions: [
+          '对照作文题目训练，避免生硬套用',
+          '<span class="res-icon">📄</span><a href="resources/作文迁移.pdf" target="_blank">《作文迁移》</a>',
+          '<span class="res-icon">📄</span><a href="resources/考前状态激发-审题.pdf" target="_blank">《考前状态激发-审题》</a>'
+        ] },
+      { id: 'writing-3', qType: '31 记叙文写作·现场行文（小白文）', reason: '现场行文能力不足',
+        solutions: [
+          '加强限时写作训练、积累素材',
+          '<span class="res-icon">📄</span><a href="resources/大连期中作文25篇.pdf" target="_blank">《大连期中作文25篇》</a>',
+          '<span class="res-icon">📄</span><a href="resources/小小作文.pdf" target="_blank">《小小作文》</a>'
+        ] },
+    ]
+  },
+];
+
+/* ============== 数据层（localStorage） ============== */
+const LS = {
+  get(key, fallback) {
+    try { return JSON.parse(localStorage.getItem(key)) ?? fallback; }
+    catch { return fallback; }
+  },
+  set(key, val) {
+    try { localStorage.setItem(key, JSON.stringify(val)); return true; }
+    catch (e) {
+      console.error('💥 localStorage 写入失败', key, e);
+      alert(`⚠️ 本地存储已满！\n\n错误：${e.message}\n\n建议：点击总览 → 底部「🔄 清空所有数据」，然后重新录入。`);
+      return false;
+    }
+  },
+  remove(key) { try { localStorage.removeItem(key); } catch {} }
+};
+
+/* —— 旧知识点 ID → 新 ID 迁移映射（KNOWLEDGE 重构 v2） —— */
+const TOPIC_ID_MIGRATION = {
+  'reading-2':  'reading-2a',   // 散文 16-20 合并 → 16 筛选整合题
+  'reading-3':  'reading-3a',   // 说明文 21-24 合并 → 21 筛选整合题
+  'reading-4':  'reading-4a',   // 议论文 25-28 合并 → 25 论证思路+中心论点
+};
+
+function migrateTopicId(oldId) {
+  if (!oldId) return oldId;
+  if (/^reading-\d[a-z]$/.test(oldId)) return oldId;   // 已是新格式不动
+  return TOPIC_ID_MIGRATION[oldId] || oldId;
+}
+
+let state = {
+  mistakes: LS.get('mistakes', []),
+  plans: LS.get('plans', []),
+  exams: LS.get('exams', []),
+};
+
+// 启动时自动迁移旧 topicId
+(function runMigration() {
+  let changed = false;
+  state.mistakes.forEach(m => {
+    const nid = migrateTopicId(m.topicId);
+    if (nid !== m.topicId) { m.topicId = nid; changed = true; }
+  });
+  state.exams.forEach(ex => {
+    (ex.questions || []).forEach(q => {
+      const nid = migrateTopicId(q.topicId);
+      if (nid !== q.topicId) { q.topicId = nid; changed = true; }
+    });
+  });
+  if (changed) {
+    save();
+    console.log('✅ 知识点 ID 迁移完成');
+  }
+})();
+
+function save() {
+  return LS.set('mistakes', state.mistakes)
+    && LS.set('plans', state.plans)
+    && LS.set('exams', state.exams);
+}
+
+/* ============== 数据导入 / 导出（跨设备同步） ============== */
+// 按 id 合并：导入数据覆盖本地同 id 项，新 id 项追加
+function mergeById(localArr, importArr) {
+  const map = new Map();
+  localArr.forEach(x => { if (x && x.id) map.set(x.id, x); });
+  importArr.forEach(x => { if (x && x.id) map.set(x.id, x); });
+  return Array.from(map.values());
+}
+
+function exportData() {
+  const payload = {
+    version: 1,
+    app: '语文学习助手',
+    exportedAt: new Date().toISOString(),
+    mistakes: state.mistakes,
+    plans: state.plans,
+    exams: state.exams,
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const d = new Date();
+  const stamp = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+  a.href = url;
+  a.download = `语文助手数据_${stamp}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function importData(fileList) {
+  const file = fileList && fileList[0];
+  const status = $('#importStatus');
+  if (!file) return;
+  if (!file.name.toLowerCase().endsWith('.json')) {
+    if (status) status.innerHTML = '<span style="color:var(--danger)">❌ 请选择 .json 数据文件</span>';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    let data;
+    try {
+      data = JSON.parse(e.target.result);
+    } catch {
+      if (status) status.innerHTML = '<span style="color:var(--danger)">❌ 文件格式错误，不是有效的 JSON</span>';
+      return;
+    }
+    // 兼容两种格式：{mistakes,plans,exams} 或直接数组
+    const importMistakes = Array.isArray(data.mistakes) ? data.mistakes : (Array.isArray(data) ? data : []);
+    const importPlans = Array.isArray(data.plans) ? data.plans : [];
+    const importExams = Array.isArray(data.exams) ? data.exams : [];
+
+    if (importMistakes.length === 0 && importPlans.length === 0 && importExams.length === 0) {
+      if (status) status.innerHTML = '<span style="color:var(--danger)">❌ 文件里没有有效的试卷/错题/计划数据</span>';
+      return;
+    }
+
+    const localCount = state.mistakes.length + state.plans.length + state.exams.length;
+    const importCount = importMistakes.length + importPlans.length + importExams.length;
+    let mode;
+    if (localCount === 0) {
+      mode = 'merge';  // 本地空，直接合并即导入
+    } else {
+      mode = confirm(
+        `检测到本地已有数据：错题 ${state.mistakes.length} / 计划 ${state.plans.length} / 试卷 ${state.exams.length}\n` +
+        `导入文件含：错题 ${importMistakes.length} / 计划 ${importPlans.length} / 试卷 ${importExams.length}\n\n` +
+        `点击「确定」= 合并（同 ID 以导入文件为准，新数据追加）\n` +
+        `点击「取消」= 覆盖（清空本地，完全替换为导入文件）`
+      ) ? 'merge' : 'replace';
+    }
+
+    if (mode === 'replace') {
+      if (!confirm('⚠️ 确认用导入文件完全覆盖本地数据？此操作不可恢复！')) return;
+      state.mistakes = importMistakes;
+      state.plans = importPlans;
+      state.exams = importExams;
+    } else {
+      state.mistakes = mergeById(state.mistakes, importMistakes);
+      state.plans = mergeById(state.plans, importPlans);
+      state.exams = mergeById(state.exams, importExams);
+    }
+
+    // 导入后跑一次 topicId 迁移，保证兼容老版本导出的文件
+    state.mistakes.forEach(m => { m.topicId = migrateTopicId(m.topicId); });
+    state.exams.forEach(ex => (ex.questions || []).forEach(q => { q.topicId = migrateTopicId(q.topicId); }));
+
+    if (save()) {
+      // 全量刷新视图
+      renderDashboard();
+      renderMistakes();
+      renderPlan();
+      renderExamList();
+      renderParent();
+      const modeText = mode === 'replace' ? '覆盖' : '合并';
+      if (status) status.innerHTML = `<span style="color:var(--success)">✅ 导入成功（${modeText}）！错题 ${state.mistakes.length} / 计划 ${state.plans.length} / 试卷 ${state.exams.length}</span>`;
+    }
+    // 重置 input，允许重复导入同一文件
+    $('#importFileInput').value = '';
+  };
+  reader.readAsText(file, 'utf-8');
+}
+
+function clearAllData() {
+  if (!confirm('⚠️ 确认清空所有试卷、错题、学习计划？此操作不可恢复！\n\n建议先「导出全部数据」备份。')) return;
+  ['mistakes', 'plans', 'exams'].forEach(k => localStorage.removeItem(k));
+  state.mistakes = [];
+  state.plans = [];
+  state.exams = [];
+  renderDashboard();
+  renderMistakes();
+  renderPlan();
+  renderExamList();
+  renderParent();
+  const status = $('#importStatus');
+  if (status) status.innerHTML = '<span style="color:var(--success)">🗑️ 已清空所有数据</span>';
+}
+
+/* ============== 工具 ============== */
+function $(sel) { return document.querySelector(sel); }
+function $$(sel) { return document.querySelectorAll(sel); }
+function todayStr() { return new Date().toISOString().slice(0, 10); }
+function daysLater(n) {
+  const d = new Date(); d.setDate(d.getDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+/* ============== 导航切换 ============== */
+$$('#mainNav button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    $$('#mainNav button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const section = btn.dataset.section;
+    $$('main section').forEach(s => s.classList.remove('active'));
+    $('#section-' + section).classList.add('active');
+    if (section === 'dashboard') renderDashboard();
+    if (section === 'exam') { showExamList(); renderExamList(); }
+    if (section === 'knowledge') renderKnowledge();
+    if (section === 'mistakes') renderMistakes();
+    if (section === 'plan') renderPlan();
+    if (section === 'parent') renderParent();
+  });
+});
+
+/* ============== 知识库渲染 ============== */
+function renderKnowledge() {
+  const container = $('#knowledgeTree');
+  container.innerHTML = KNOWLEDGE.map(m => `
+    <div class="module">
+      <div class="module-header" onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.arrow').textContent = this.nextElementSibling.classList.contains('hidden') ? '▶' : '▼'">
+        <h3>${m.name}（${m.topics.length}个知识点）</h3>
+        <span class="arrow">▼</span>
+      </div>
+      <div class="module-body">
+        ${m.topics.map(t => `
+          <div class="topic">
+            <div class="topic-title"><span class="tag tag-${m.color}">${m.name.slice(0,2)}</span> ${t.qType}</div>
+            <div class="topic-reason">⚠️ 错因：${t.reason}</div>
+            <div class="topic-solutions">
+              📋 解决办法：<br>
+              <ol style="padding-left:20px;">${t.solutions.map(s => `<li>${s}</li>`).join('')}</ol>
+            </div>
+            <div style="margin-top:8px;">
+              <button class="btn btn-sm btn-outline" onclick="addMistakeFromTopic('${t.id}','${m.id}')">➕ 标记为我的错题</button>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ============== 总览渲染 ============== */
+function renderDashboard() {
+  // Stats
+  const moduleIds = KNOWLEDGE.map(m => m.id);
+  const totalTopics = KNOWLEDGE.reduce((s, m) => s + m.topics.length, 0);
+  const weakModules = getWeakModules();
+  const todayPlan = state.plans.filter(p => p.date === todayStr() && !p.done);
+
+  $('#statTopics').textContent = totalTopics;
+  $('#statMistakes').textContent = state.mistakes.length;
+  $('#statWeak').textContent = weakModules.length;
+  $('#statToday').textContent = todayPlan.length;
+
+  // Module progress
+  const mp = $('#moduleProgress');
+  mp.innerHTML = KNOWLEDGE.map(m => {
+    const mists = state.mistakes.filter(x => x.moduleId === m.id);
+    const weak = mists.filter(x => x.status === 'weak').length;
+    const learned = mists.filter(x => x.status === 'learning').length;
+    const ok = mists.filter(x => x.status === 'ok').length;
+    const total = m.topics.length;
+    const covered = mists.length > 0 ? Math.min(100, Math.round(((ok * 100 + learned * 50) / (total * 100)) * 100)) : (mists.length === 0 ? 0 : 30);
+    const pct = mists.length === 0 ? 0 : Math.round((ok / (ok + learned + weak || 1)) * 100);
+    const cls = pct >= 70 ? 'high' : pct >= 40 ? 'med' : 'low';
+    return `
+      <div class="progress-row">
+        <label>${m.name}</label>
+        <div class="progress-bar"><div class="progress-fill ${cls}" style="width:${pct}%"></div></div>
+        <div class="pct">${pct}%</div>
+      </div>
+    `;
+  }).join('');
+
+  // Topic mastery analysis
+  renderTopicMastery();
+
+  // Recent mistakes
+  const recent = state.mistakes.slice(-5).reverse();
+  $('#recentMistakes').innerHTML = recent.length === 0
+    ? '<div class="empty-state"><div class="icon">✏️</div>还没有错题，快去录入吧！</div>'
+    : recent.map(renderMistakeItem).join('');
+
+  // Today tips
+  $('#todayTips').innerHTML = generateTips();
+}
+
+function generateTips() {
+  const tips = [];
+  const weak = getWeakModules();
+  weak.forEach(m => {
+    const weakTopics = KNOWLEDGE.find(x => x.id === m).topics;
+    tips.push(`<div class="parent-alert"><h4>📌 ${m === 'basic' ? '基础知识' : m === 'lit' ? '名著' : m === 'poem' ? '古诗文' : m === 'classical' ? '文言文' : m === 'reading' ? '现代文' : '写作'}模块薄弱</h4>` +
+      `建议重点攻克：${weakTopics.slice(0, 2).map(t => t.qType).join('、')}</div>`);
+  });
+
+  if (state.plans.filter(p => !p.done).length > 5) {
+    tips.push(`<div class="parent-alert"><h4>🗓️ 待完成任务较多</h4>有 ${state.plans.filter(p => !p.done).length} 项任务未完成，建议今日集中处理 3-5 项</div>`);
+  }
+  if (state.mistakes.filter(x => x.status === 'weak').length >= 3) {
+    tips.push(`<div class="parent-alert"><h4>❌ 有 ${state.mistakes.filter(x => x.status === 'weak').length} 个知识点未掌握</h4>需要进行专项突破</div>`);
+  }
+  if (tips.length === 0) {
+    tips.push('<div class="parent-tip"><h4>🎉 目前状态良好</h4>继续保持！建议每天花 30 分钟复习错题</div>');
+  }
+  return tips.join('');
+}
+
+function getWeakModules() {
+  return KNOWLEDGE.map(m => ({
+    id: m.id,
+    weakCount: state.mistakes.filter(x => x.moduleId === m.id && x.status === 'weak').length,
+    learnedCount: state.mistakes.filter(x => x.moduleId === m.id && x.status === 'learning').length,
+  })).filter(x => x.weakCount > 0 || x.learnedCount > 1).map(x => x.id);
+}
+
+/* ============== 知识点掌握度分析 ============== */
+// 综合「试卷得分」+「错题复盘状态」评估每个知识点的掌握程度
+function getTopicMastery() {
+  return KNOWLEDGE.flatMap(m => m.topics.map(t => {
+    const mists = state.mistakes.filter(x => x.topicId === t.id);
+    const weak = mists.filter(x => x.status === 'weak').length;
+    const learning = mists.filter(x => x.status === 'learning').length;
+    const ok = mists.filter(x => x.status === 'ok').length;
+
+    // 汇总所有试卷中该知识点的得分
+    let got = 0, full = 0;
+    state.exams.forEach(e => (e.questions || []).forEach(q => {
+      if (q.topicId !== t.id) return;
+      if (q.fullScore === undefined || q.fullScore === null || q.fullScore === '') return;
+      got += Number(q.myScore || 0);
+      full += Number(q.fullScore);
+    }));
+    const hasExam = full > 0;
+    const examPct = hasExam ? Math.round(got / full * 100) : null;
+
+    let level, pct;
+    if (weak > 0) {                       // 有未掌握错题 → 未掌握
+      level = 'weak';
+      pct = examPct === null ? 30 : Math.min(examPct, 45);
+    } else if (hasExam && examPct < 60) { // 试卷失分严重 → 未掌握
+      level = 'weak';
+      pct = examPct;
+    } else if (learning > 0) {            // 有学习中错题
+      level = 'learning';
+      pct = examPct === null ? 60 : Math.min(examPct, 75);
+    } else if (hasExam && examPct < 85) { // 试卷中等
+      level = 'learning';
+      pct = examPct;
+    } else if (ok > 0) {                  // 错题已掌握
+      level = 'ok';
+      pct = examPct === null ? 90 : Math.max(examPct, 90);
+    } else if (hasExam) {                 // 试卷高分
+      level = 'ok';
+      pct = examPct;
+    } else {                              // 无任何数据
+      level = 'none';
+      pct = null;
+    }
+    return { m, t, weak, learning, ok, hasExam, got, full, pct, level };
+  }));
+}
+
+function renderTopicMastery() {
+  const el = $('#topicMastery');
+  if (!el) return;
+  const rows = getTopicMastery();
+  const counts = { weak: 0, learning: 0, ok: 0, none: 0 };
+  rows.forEach(r => { counts[r.level] += 1; });
+  const order = { weak: 0, learning: 1, none: 2, ok: 3 };
+
+  const touched = rows.filter(r => r.level !== 'none')
+    .sort((a, b) => (order[a.level] - order[b.level]) || (a.pct - b.pct) || a.t.qType.localeCompare(b.t.qType));
+  const untouched = rows.filter(r => r.level === 'none');
+
+  const rowHtml = r => {
+    const pct = r.pct === null ? 0 : Math.max(0, Math.min(100, r.pct));
+    let detail = '';
+    if (r.hasExam) detail = `试卷 ${r.got}/${r.full}`;
+    else if (r.weak + r.learning + r.ok > 0) detail = `错题 ${r.weak + r.learning + r.ok} 条`;
+    return `
+      <div class="mastery-row">
+        <div class="m-name">
+          <span class="tag tag-${r.m.color}">${r.m.name.slice(0, 2)}</span>
+          <span class="topic-name" title="${r.t.qType}">${r.t.qType}</span>
+        </div>
+        <div class="m-bar"><div class="m-fill ${r.level}" style="width:${r.level === 'none' ? 0 : pct}%"></div></div>
+        <div class="m-pct">${r.level === 'none' ? '—' : pct + '%'}<small>${detail}</small></div>
+      </div>`;
+  };
+
+  let html = `
+    <div class="mastery-summary">
+      <span class="mastery-pill weak">❌ 未掌握<b>${counts.weak}</b></span>
+      <span class="mastery-pill learning">🔄 学习中<b>${counts.learning}</b></span>
+      <span class="mastery-pill ok">✅ 已掌握<b>${counts.ok}</b></span>
+      <span class="mastery-pill none">⚪ 未涉及<b>${counts.none}</b></span>
+    </div>`;
+
+  if (touched.length === 0) {
+    html += '<div class="empty-state"><div class="icon">🎯</div>还没有试卷或错题数据，录入后即可看到逐知识点的掌握度分析</div>';
+  } else {
+    html += touched.map(rowHtml).join('');
+  }
+  if (untouched.length > 0) {
+    html += `
+      <details class="mastery-detail">
+        <summary>▸ 展开查看其余 ${untouched.length} 个未涉及的知识点</summary>
+        ${untouched.map(rowHtml).join('')}
+      </details>`;
+  }
+  el.innerHTML = html;
+}
+
+/* ============== 错题录入与渲染 ============== */
+function openMistakeModal(mistakeOrId) {
+  const mistake = typeof mistakeOrId === 'string'
+    ? state.mistakes.find(x => x.id === mistakeOrId)
+    : mistakeOrId;
+  const modal = $('#mistakeModal');
+  $('#mistakeModalTitle').textContent = mistake ? '编辑错题' : '录入错题';
+  $('#editMistakeId').value = mistake ? mistake.id : '';
+  $('#mSource').value = mistake?.source || '';
+  $('#mReason').value = mistake?.reason || '';
+  $('#mContent').value = mistake?.content || '';
+  $('#mReflection').value = mistake?.reflection || '';
+  $('#mStatus').value = mistake?.status || 'learning';
+
+  // 回填照片：错题自己的 photos 优先；没有则用 examId 关联试卷的照片（只读展示）
+  editingMistakeExamId = mistake?.examId || null;
+  editingMistakePhotos = mistake?.photos ? [...mistake.photos] : [];
+  editingMistakePhotoSource = mistake?.photos?.length > 0 ? 'own' : 'exam';
+  // 如果错题没自己的照片但关联了有照片的试卷 → 也加载进来
+  if (editingMistakePhotos.length === 0 && editingMistakeExamId) {
+    const linkedExam = state.exams.find(e => e.id === editingMistakeExamId);
+    if (linkedExam?.photos?.length > 0) {
+      editingMistakePhotos = [...linkedExam.photos];
+      editingMistakePhotoSource = 'exam';
+    }
+  }
+
+  // 填充模块下拉
+  const modSel = $('#mModule');
+  modSel.innerHTML = KNOWLEDGE.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+  modSel.value = mistake?.moduleId || KNOWLEDGE[0].id;
+  updateTopicSelect(mistake?.moduleId || KNOWLEDGE[0].id, mistake?.topicId);
+
+  modSel.onchange = () => {
+    $('#mReason').value = '';
+    updateTopicSelect(modSel.value);
+  };
+
+  renderMistakePhotoPreview();
+  modal.classList.add('open');
+}
+
+function updateTopicSelect(moduleId, selectedTopic) {
+  const m = KNOWLEDGE.find(x => x.id === moduleId);
+  const sel = $('#mTopic');
+  sel.innerHTML = m.topics.map(t => `<option value="${t.id}">${t.qType}</option>`).join('');
+  if (selectedTopic) sel.value = selectedTopic;
+  sel.onchange = () => {
+    const topic = m.topics.find(t => t.id === sel.value);
+    if (topic && !$('#mReason').value) $('#mReason').value = topic.reason;
+  };
+  // 预填原因
+  if (!$('#mReason').value && selectedTopic) {
+    const topic = m.topics.find(t => t.id === selectedTopic);
+    if (topic) $('#mReason').value = topic.reason;
+  }
+}
+
+function closeMistakeModal() { $('#mistakeModal').classList.remove('open'); }
+
+function saveMistake() {
+  const id = $('#editMistakeId').value;
+  const data = {
+    id: id || uid(),
+    moduleId: $('#mModule').value,
+    topicId: $('#mTopic').value,
+    source: $('#mSource').value.trim(),
+    reason: $('#mReason').value.trim(),
+    content: $('#mContent').value.trim(),
+    reflection: $('#mReflection').value.trim(),
+    status: $('#mStatus').value,
+    examId: editingMistakeExamId,
+    createdAt: id ? undefined : new Date().toISOString().slice(0, 19),
+  };
+  // 只在有照片时才存 photos 字段（删除全部后 → 字段不存在，避免保留旧值）
+  if (editingMistakePhotos.length > 0) {
+    data.photos = [...editingMistakePhotos];
+  }
+  if (id) {
+    const idx = state.mistakes.findIndex(x => x.id === id);
+    if (idx >= 0) { data.createdAt = state.mistakes[idx].createdAt; state.mistakes[idx] = data; }
+  } else {
+    state.mistakes.push(data);
+  }
+  if (!save()) return;  // 存储失败（localStorage满）→ 不关弹窗，让用户看到错误提示
+  closeMistakeModal();
+  renderMistakes();
+  renderDashboard();
+  renderParent();
+}
+
+function addMistakeFromTopic(topicId, moduleId) {
+  const topic = KNOWLEDGE.find(m => m.id === moduleId).topics.find(t => t.id === topicId);
+  openMistakeModal();
+  $('#mModule').value = moduleId;
+  updateTopicSelect(moduleId, topicId);
+  $('#mReason').value = topic.reason;
+}
+
+function renderMistakes() {
+  const list = $('#mistakeList');
+  if (state.mistakes.length === 0) {
+    list.innerHTML = '<div class="empty-state"><div class="icon">✏️</div>还没有错题记录<br><br>点击右上角"录入错题"开始</div>';
+    return;
+  }
+  list.innerHTML = state.mistakes.slice().reverse().map(renderMistakeItem).join('');
+}
+
+function renderMistakeItem(m) {
+  const mod = KNOWLEDGE.find(x => x.id === m.moduleId);
+  const topic = mod?.topics.find(t => t.id === m.topicId);
+  const statusTag = m.status === 'weak' ? '<span class="tag tag-warn">❌ 未掌握</span>'
+    : m.status === 'ok' ? '<span class="tag tag-ok">✅ 已掌握</span>'
+    : '<span class="tag tag-info">🔄 学习中</span>';
+  const colorClass = mod?.color || 'basic';
+
+  // 关联原试卷
+  const linkedExam = m.examId ? state.exams.find(e => e.id === m.examId) : null;
+
+  // 照片：优先错题自己的 photos，否则看关联试卷有没有 photos
+  let photoHtml = '';
+  if (m.photos && m.photos.length > 0) {
+    photoHtml = `<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+      ${m.photos.map(p => `<img src="${p.data}" style="width:60px;height:60px;object-fit:cover;border-radius:4px;cursor:pointer;border:1px solid var(--border);" onclick="openLightbox('${p.data.replace(/'/g, "%27")}')" title="点击放大">`).join('')}
+    </div>`;
+  } else if (linkedExam && linkedExam.photos && linkedExam.photos.length > 0) {
+    photoHtml = `<div style="margin-top:8px;font-size:12px;color:var(--text-light);background:#f7fafc;padding:6px 8px;border-radius:4px;">
+      📎 来自试卷 <strong>${linkedExam.name}</strong>（含 ${linkedExam.photos.length} 张照片）<br>
+      <span style="cursor:pointer;color:var(--primary);" onclick="openMistakeModal('${m.id}')">📷 点击给这道题拍特写</span>
+    </div>`;
+  } else if (linkedExam) {
+    photoHtml = `<div style="margin-top:8px;font-size:12px;color:var(--text-light);">📎 来自试卷 <strong>${linkedExam.name}</strong></div>`;
+  }
+
+  return `
+    <div class="list-item">
+      <div class="list-item-header">
+        <div>
+          <span class="tag tag-${colorClass}">${mod?.name || ''}</span>
+          <strong>${topic?.qType || '未分类'}</strong>
+          ${statusTag}
+        </div>
+        <div style="font-size:12px;color:var(--text-light);">${m.source || ''}</div>
+      </div>
+      <div class="list-item-body">
+        ${m.reason ? '<div>⚠️ <strong>错因：</strong>' + m.reason + '</div>' : ''}
+        ${m.content ? '<div>📝 ' + m.content + '</div>' : ''}
+        ${m.reflection ? '<div style="margin-top:6px;background:#f7fafc;padding:8px;border-radius:4px;">💭 ' + m.reflection + '</div>' : ''}
+        ${photoHtml}
+      </div>
+      <div class="list-item-actions">
+        <button class="btn btn-sm btn-outline" onclick="openMistakeModal('${m.id}')">编辑</button>
+        <button class="btn btn-sm btn-outline" onclick="updateStatus('${m.id}','weak')">未掌握</button>
+        <button class="btn btn-sm btn-outline" onclick="updateStatus('${m.id}','learning')">学习中</button>
+        <button class="btn btn-sm btn-outline" onclick="updateStatus('${m.id}','ok')">已掌握</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteMistake('${m.id}')">删除</button>
+      </div>
+    </div>
+  `;
+}
+
+function updateStatus(id, status) {
+  const m = state.mistakes.find(x => x.id === id);
+  if (m) { m.status = status; save(); renderMistakes(); renderDashboard(); renderParent(); }
+}
+function deleteMistake(id) {
+  if (!confirm('确定删除这条错题吗？')) return;
+  state.mistakes = state.mistakes.filter(x => x.id !== id);
+  save(); renderMistakes(); renderDashboard(); renderParent();
+}
+
+/* ============== 学习计划 ============== */
+function renderPlan() {
+  const list = $('#planList');
+  if (state.plans.length === 0) {
+    list.innerHTML = '<div class="empty-state"><div class="icon">🗓️</div>还没有学习计划<br><br>点击"重新生成"自动根据错题生成，或手动添加</div>';
+    return;
+  }
+  // 按日期分组
+  const byDate = {};
+  state.plans.forEach(p => {
+    (byDate[p.date] = byDate[p.date] || []).push(p);
+  });
+  const sortedDates = Object.keys(byDate).sort();
+  list.innerHTML = sortedDates.map(date => {
+    const items = byDate[date];
+    const doneCount = items.filter(x => x.done).length;
+    return `
+      <div class="plan-date">📅 ${date} <span style="font-weight:400;color:var(--text-light);font-size:12px;">(${doneCount}/${items.length} 完成)</span></div>
+      ${items.map(renderPlanItem).join('')}
+    `;
+  }).join('');
+}
+
+function renderPlanItem(p) {
+  const mod = KNOWLEDGE.find(x => x.id === p.moduleId);
+  const colorClass = mod?.color || 'basic';
+  return `
+    <div class="plan-item ${p.done ? 'done' : ''}">
+      <input type="checkbox" ${p.done ? 'checked' : ''} onchange="togglePlan('${p.id}')">
+      <div class="plan-item-tag"><span class="tag tag-${colorClass}">${mod?.name?.slice(0,2) || ''}</span></div>
+      <div class="plan-item-text">${p.task}</div>
+      <button class="btn btn-sm btn-danger" onclick="deletePlan('${p.id}')">×</button>
+    </div>
+  `;
+}
+
+function togglePlan(id) {
+  const p = state.plans.find(x => x.id === id);
+  if (p) { p.done = !p.done; save(); renderPlan(); renderParent(); renderDashboard(); }
+}
+function deletePlan(id) {
+  state.plans = state.plans.filter(x => x.id !== id);
+  save(); renderPlan();
+}
+
+function generatePlan() {
+  // 根据未掌握的错题，自动生成 7 天计划
+  const weak = state.mistakes.filter(x => x.status !== 'ok');
+  if (weak.length === 0) {
+    alert('当前没有需要改进的错题，可以先录入一些错题再生成计划！');
+    return;
+  }
+
+  // 清空旧计划
+  state.plans = [];
+
+  // 按模块聚合错题
+  const byModule = {};
+  weak.forEach(m => {
+    (byModule[m.moduleId] = byModule[m.moduleId] || []).push(m);
+  });
+
+  let dayOffset = 0;
+  Object.entries(byModule).forEach(([modId, mists]) => {
+    const mod = KNOWLEDGE.find(x => x.id === modId);
+    if (!mod) return;
+    mists.forEach((mist, idx) => {
+      const topic = mod.topics.find(t => t.id === mist.topicId);
+      const date = daysLater(dayOffset);
+      // 每个错题的前 2 天安排对应知识点的解决办法
+      const solutions = topic?.solutions || ['复习错题', '做同类题目'];
+      const task1 = solutions[idx % solutions.length];
+      state.plans.push({
+        id: uid(), task: `📌 ${topic?.qType || ''}：${task1}`,
+        moduleId: modId, date, done: false, auto: true
+      });
+      dayOffset = (dayOffset + 1) % 7;
+    });
+  });
+
+  // 增加通用任务
+  state.plans.push({ id: uid(), task: '📝 复习今日所有错题（20分钟）', moduleId: 'basic', date: daysLater(0), done: false });
+  state.plans.push({ id: uid(), task: '📝 默写易错字音字形', moduleId: 'basic', date: daysLater(1), done: false });
+  state.plans.push({ id: uid(), task: '📝 背诵古诗中心思想', moduleId: 'poem', date: daysLater(2), done: false });
+  state.plans.push({ id: uid(), task: '📝 刷 3 篇文言文翻译', moduleId: 'classical', date: daysLater(3), done: false });
+  state.plans.push({ id: uid(), task: '📝 读 1 篇散文 + 1 篇说明文', moduleId: 'reading', date: daysLater(4), done: false });
+  state.plans.push({ id: uid(), task: '📝 练写 1 篇作文片段', moduleId: 'writing', date: daysLater(5), done: false });
+  state.plans.push({ id: uid(), task: '📝 本周错题回顾 + 测试', moduleId: 'basic', date: daysLater(6), done: false });
+
+  save(); renderPlan();
+  alert('✅ 学习计划已生成！请查看 7 天任务安排');
+}
+
+function manualAddPlan() {
+  const today = todayStr();
+  $('#planModal').classList.add('open');
+  $('#pDate').value = today;
+  const modSel = $('#pModule');
+  modSel.innerHTML = KNOWLEDGE.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+}
+function closePlanModal() { $('#planModal').classList.remove('open'); }
+function savePlan() {
+  const task = $('#pTask').value.trim();
+  if (!task) { alert('请输入任务内容'); return; }
+  state.plans.push({
+    id: uid(), task, moduleId: $('#pModule').value,
+    date: $('#pDate').value, done: false
+  });
+  save(); closePlanModal(); renderPlan();
+}
+
+/* ============== 家长视图 ============== */
+function renderParent() {
+  // Alerts
+  const alerts = [];
+  const weak = state.mistakes.filter(x => x.status === 'weak');
+  if (weak.length >= 3) {
+    const modNames = [...new Set(weak.map(w => KNOWLEDGE.find(m => m.id === w.moduleId)?.name.slice(0,2) || '未分类'))];
+    alerts.push(`<div class="parent-alert"><h4>⚠️ 有 ${weak.length} 个知识点未掌握</h4>集中在：${modNames.join('、')}。建议今晚花 30 分钟集中突破。</div>`);
+  }
+  const overDue = state.plans.filter(p => !p.done && p.date < todayStr());
+  if (overDue.length > 0) {
+    alerts.push(`<div class="parent-alert"><h4>⏰ 有 ${overDue.length} 项任务已过期</h4>孩子可能需要帮助才能完成，建议今晚一起检查。</div>`);
+  }
+  const todayP = state.plans.filter(p => p.date === todayStr());
+  const todayDone = todayP.filter(p => p.done).length;
+  if (todayP.length > 0 && todayDone === 0) {
+    alerts.push(`<div class="parent-alert"><h4>📅 今日任务还未开始</h4>共有 ${todayP.length} 项任务待完成，可温和提醒孩子。</div>`);
+  }
+  $('#parentAlerts').innerHTML = alerts.length ? alerts.join('') : '<div class="parent-tip"><h4>👍 当前无需特别关注</h4>孩子学习状态良好，继续保持即可。</div>';
+
+  // Goods
+  const goods = [];
+  if (state.mistakes.filter(x => x.status === 'ok').length > 0) {
+    goods.push(`<div class="parent-tip"><h4>✅ 已掌握 ${state.mistakes.filter(x => x.status === 'ok').length} 个知识点</h4>复习有效，继续保持！</div>`);
+  }
+  if (todayP.length > 0 && todayDone / todayP.length >= 0.6) {
+    goods.push(`<div class="parent-tip"><h4>👍 今日完成度 ${Math.round(todayDone / todayP.length * 100)}%</h4>任务执行力不错，值得表扬！</div>`);
+  }
+  // Distribution
+  const dist = KNOWLEDGE.map(m => {
+    const allM = state.mistakes.filter(x => x.moduleId === m.id);
+    const ok = allM.filter(x => x.status === 'ok').length;
+    const weakCount = allM.filter(x => x.status === 'weak').length;
+    return { name: m.name.slice(0,3), ok, weakCount, total: allM.length };
+  });
+  $('#parentDistribution').innerHTML = dist.map(d => `
+    <div class="progress-row">
+      <label>${d.name}</label>
+      <div class="progress-bar"><div class="progress-fill ${d.total === 0 ? 'high' : (d.ok / d.total >= 0.5 ? 'high' : d.ok / d.total >= 0.2 ? 'med' : 'low')}" style="width:${d.total === 0 ? 100 : Math.round(d.ok / d.total * 100)}%"></div></div>
+      <div class="pct">${d.ok}/${d.total}${d.weakCount > 0 ? ` ❌${d.weakCount}` : ''}</div>
+    </div>
+  `).join('');
+
+  // Weekly
+  const weekStart = new Date(); weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
+  const weeklyData = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(weekStart); d.setDate(d.getDate() + i);
+    const ds = d.toISOString().slice(0, 10);
+    const ps = state.plans.filter(p => p.date === ds);
+    const done = ps.filter(p => p.done).length;
+    const total = ps.length;
+    weeklyData.push({ date: ds.slice(5), done, total });
+  }
+  $('#parentWeekly').innerHTML = weeklyData.map(w => {
+    const pct = w.total === 0 ? 100 : Math.round(w.done / w.total * 100);
+    return `
+      <div class="progress-row">
+        <label>${w.date}</label>
+        <div class="progress-bar"><div class="progress-fill ${pct >= 80 ? 'high' : pct >= 50 ? 'med' : 'low'}" style="width:${pct}%"></div></div>
+        <div class="pct">${w.done}/${w.total}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+/* ============== 试卷库 ============== */
+let editingExamQuestions = [];
+
+function showExamList() {
+  $('#examListView').classList.remove('hidden');
+  $('#examDetailView').classList.add('hidden');
+}
+function showExamDetail() {
+  $('#examListView').classList.add('hidden');
+  $('#examDetailView').classList.remove('hidden');
+}
+
+function renderExamList() {
+  const list = $('#examList');
+  if (state.exams.length === 0) {
+    list.innerHTML = '<div class="empty-state"><div class="icon">📝</div>还没有录入任何试卷<br><br>点击右上角"+ 录入新试卷"开始</div>';
+    return;
+  }
+  list.innerHTML = state.exams.slice().reverse().map(e => {
+    const wrongCount = e.questions.filter(q => q.myScore < q.fullScore).length;
+    const totalGot = e.questions.reduce((s, q) => s + Number(q.myScore || 0), 0);
+    const totalFull = e.questions.reduce((s, q) => s + Number(q.fullScore || 0), 0);
+    const pct = totalFull > 0 ? Math.round(totalGot / totalFull * 100) : 0;
+    const modIds = [...new Set(e.questions.filter(q => q.myScore < q.fullScore).map(q => q.moduleId))];
+    const modNames = modIds.map(id => KNOWLEDGE.find(m => m.id === id)?.name || id).join('、');
+    return `
+    <div class="list-item">
+      <div class="list-item-header">
+        <div>
+          <strong style="font-size:15px;">📝 ${e.name}</strong>
+          <span class="tag tag-info" style="margin-left:8px;">${e.grade}</span>
+          <span class="tag ${pct >= 80 ? 'tag-ok' : pct >= 60 ? 'tag-info' : 'tag-warn'}" style="margin-left:4px;">${pct}分 (${totalGot}/${totalFull})</span>
+          ${wrongCount > 0 ? `<span class="tag tag-warn" style="margin-left:4px;">❌ ${wrongCount} 错题</span>` : ''}
+        </div>
+        <div style="font-size:12px;color:var(--text-light);">${e.date || ''}</div>
+      </div>
+      ${modNames ? `<div style="font-size:12px;color:var(--danger);margin-bottom:4px;">薄弱模块：${modNames}</div>` : ''}
+      <div class="list-item-actions">
+        <button class="btn btn-sm btn-outline" onclick='showExamDetailView("${e.id}")'>📊 查看详情</button>
+        <button class="btn btn-sm btn-outline" onclick='openExamModal("${e.id}")'>✏️ 编辑</button>
+        <button class="btn btn-sm btn-outline" onclick='autoSyncExamToMistakes("${e.id}")'>🔄 同步错题</button>
+        <button class="btn btn-sm btn-danger" onclick='deleteExam("${e.id}")'>删除</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openExamModal(examOrId) {
+  // 兼容：可能传 exam 对象，也可能只传 exam.id 字符串
+  const exam = typeof examOrId === 'string'
+    ? state.exams.find(e => e.id === examOrId)
+    : examOrId;
+  $('#examModalTitle').textContent = exam ? '编辑试卷' : '录入新试卷';
+  $('#editExamId').value = exam ? exam.id : '';
+  $('#eName').value = exam?.name || '';
+  $('#eDate').value = exam?.date || todayStr();
+  $('#eFullScore').value = exam?.fullScore || 100;
+  $('#eGrade').value = exam?.grade || '七年级上';
+  $('#eNotes').value = exam?.notes || '';
+  editingExamQuestions = exam ? exam.questions.map(q => ({ ...q })) : [];
+  editingExamPhotos = exam?.photos ? [...exam.photos] : [];
+  if (editingExamQuestions.length === 0) autoFillExamQuestions();
+  renderExamQuestionEditor();
+  renderPhotoPreview();
+  $('#examModal').classList.add('open');
+}
+function closeExamModal() { $('#examModal').classList.remove('open'); }
+
+function renderExamQuestionEditor() {
+  const el = $('#examQuestionsEditor');
+  const moduleOpts = KNOWLEDGE.map(m =>
+    `<optgroup label="${m.name}">${m.topics.map(t => `<option value="${t.id}" data-mod="${m.id}">${t.qType}</option>`).join('')}</optgroup>`
+  ).join('');
+  el.innerHTML = editingExamQuestions.map((q, i) => {
+    const mod = KNOWLEDGE.find(m => m.topics.some(t => t.id === q.topicId));
+    const modId = q.moduleId || mod?.id || '';
+    return `
+    <div style="display:grid;grid-template-columns:70px 1fr 70px 70px 30px;gap:6px;margin-bottom:6px;align-items:center;">
+      <input type="text" value="${q.no || ''}" placeholder="题号" data-field="no" data-idx="${i}" oninput="updateQField(${i},'no',this.value)">
+      <select data-field="topic" data-idx="${i}" onchange="updateQTopic(${i},this.value)" style="padding:6px;">
+        <option value="">选择知识点...</option>
+        ${moduleOpts}
+      </select>
+      <input type="number" value="${q.fullScore || 0}" placeholder="满分" data-field="full" data-idx="${i}" oninput="updateQField(${i},'fullScore',Number(this.value))" style="padding:6px;">
+      <input type="number" value="${q.myScore ?? ''}" placeholder="得分" data-field="my" data-idx="${i}" oninput="updateQField(${i},'myScore',this.value===''?null:Number(this.value))" style="padding:6px;background:${q.myScore !== null && q.myScore < q.fullScore ? '#fff5f5' : ''}">
+      <button class="btn btn-sm btn-danger" onclick="removeExamQuestion(${i})" style="padding:6px;">×</button>
+    </div>`;
+  }).join('');
+  // 回填已选 topic
+  editingExamQuestions.forEach((q, i) => {
+    const sel = el.querySelector(`select[data-idx="${i}"]`);
+    if (sel && q.topicId) sel.value = q.topicId;
+  });
+}
+function updateQField(i, field, val) { editingExamQuestions[i][field] = val; }
+function updateQTopic(i, topicId) {
+  const mod = KNOWLEDGE.find(m => m.topics.some(t => t.id === topicId));
+  editingExamQuestions[i].topicId = topicId;
+  editingExamQuestions[i].moduleId = mod?.id || '';
+  const topic = mod?.topics.find(t => t.id === topicId);
+  if (topic && !editingExamQuestions[i].reason) editingExamQuestions[i].reason = topic.reason;
+}
+function removeExamQuestion(i) { editingExamQuestions.splice(i, 1); renderExamQuestionEditor(); }
+function addExamQuestion() {
+  editingExamQuestions.push({ no: String(editingExamQuestions.length + 1), topicId: '', moduleId: '', fullScore: 3, myScore: null, reason: '', note: '' });
+  renderExamQuestionEditor();
+}
+function autoFillExamQuestions() {
+  editingExamQuestions = [];
+  KNOWLEDGE.forEach(m => {
+    m.topics.forEach(t => {
+      editingExamQuestions.push({
+        no: t.qType.match(/^\d+/)?.[0] || '',
+        topicId: t.id, moduleId: m.id,
+        fullScore: 3, myScore: null, reason: t.reason, note: ''
+      });
+    });
+  });
+  renderExamQuestionEditor();
+}
+
+/* ---- 照片上传 ---- */
+let editingExamPhotos = [];
+
+function addExamPhotos(fileList) {
+  const files = Array.from(fileList);
+  if (files.length === 0) return;
+  let loaded = 0;
+  files.forEach(file => {
+    // 超过 8MB 警告
+    if (file.size > 8 * 1024 * 1024) {
+      alert(`${file.name} 太大了（${(file.size/1024/1024).toFixed(1)}MB），建议缩小后再上传。`);
+    }
+    compressImage(file, 1280, 0.8).then(dataUrl => {
+      editingExamPhotos.push({ data: dataUrl, name: file.name, size: file.size });
+      loaded++;
+      if (loaded === files.length) renderPhotoPreview();
+    });
+  });
+}
+
+function compressImage(file, maxSize = 1280, quality = 0.8) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > height && width > maxSize) { height = height * maxSize / width; width = maxSize; }
+        else if (height > maxSize) { width = width * maxSize / height; height = maxSize; }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderPhotoPreview() {
+  const el = $('#examPhotoPreview');
+  if (!el) return;
+  el.innerHTML = editingExamPhotos.map((p, i) => `
+    <div class="photo-item">
+      <img src="${p.data}" alt="${p.name}" onclick="openLightbox('${p.data.replace(/'/g, "%27")}')">
+      <button class="rm-btn" onclick="removeExamPhoto(${i})" title="移除">×</button>
+    </div>
+  `).join('');
+}
+function removeExamPhoto(i) { editingExamPhotos.splice(i, 1); renderPhotoPreview(); }
+function openLightbox(src) {
+  $('#lightboxImg').src = src;
+  $('#photoLightbox').classList.add('open');
+}
+
+/* ---- 错题照片 ---- */
+let editingMistakePhotos = [];
+let editingMistakeExamId = null;
+let editingMistakePhotoSource = 'own';  // 'own' = 用户自己上传, 'exam' = 从关联试卷借来的
+
+function addMistakePhotos(fileList) {
+  const files = Array.from(fileList);
+  if (files.length === 0) return;
+  let loaded = 0;
+  files.forEach(file => {
+    if (file.size > 8 * 1024 * 1024) alert(`${file.name} 太大了，建议缩小后再上传。`);
+    compressImage(file, 1280, 0.8).then(dataUrl => {
+      editingMistakePhotos.push({ data: dataUrl, name: file.name, size: file.size });
+      editingMistakePhotoSource = 'own';  // 用户上传了 → 切换为 own
+      loaded++;
+      if (loaded === files.length) renderMistakePhotoPreview();
+    });
+  });
+}
+function renderMistakePhotoPreview() {
+  const el = $('#mistakePhotoPreview');
+  if (!el) return;
+  if (editingMistakePhotos.length === 0) { el.innerHTML = ''; return; }
+
+  // 找一下关联试卷的名字
+  const linkedExam = editingMistakeExamId
+    ? state.exams.find(e => e.id === editingMistakeExamId) : null;
+  const examName = linkedExam?.name || '';
+
+  const sourceBanner = editingMistakePhotoSource === 'exam'
+    ? `<div style="width:100%;font-size:11px;color:#1e40af;background:#dbeafe;padding:6px 8px;border-radius:4px;margin-bottom:6px;">
+        📎 以下 ${editingMistakePhotos.length} 张照片来自试卷「${examName}」，可继续上传特写或删除不需要的。保存后这些照片将真正归属本题。
+      </div>`
+    : '';
+
+  el.innerHTML = sourceBanner + editingMistakePhotos.map((p, i) => `
+    <div class="photo-item">
+      <img src="${p.data}" alt="${p.name}" onclick="openLightbox('${p.data.replace(/'/g, "%27")}')">
+      <button class="rm-btn" onclick="removeMistakePhoto(${i})" title="移除">×</button>
+    </div>
+  `).join('');
+}
+function removeMistakePhoto(i) { editingMistakePhotos.splice(i, 1); renderMistakePhotoPreview(); }
+
+// 拖拽上传
+document.addEventListener('DOMContentLoaded', () => {
+  const dz = document.querySelector('.photo-dropzone');
+  if (!dz) return;
+  ['dragover', 'dragenter'].forEach(ev => {
+    dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.add('dragover'); });
+  });
+  ['dragleave', 'drop'].forEach(ev => {
+    dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.remove('dragover'); });
+  });
+  dz.addEventListener('drop', e => {
+    if (e.dataTransfer?.files?.length) addExamPhotos(e.dataTransfer.files);
+  });
+});
+
+function saveExam() {
+  const data = {
+    id: $('#editExamId').value || uid(),
+    name: $('#eName').value.trim(),
+    date: $('#eDate').value,
+    fullScore: Number($('#eFullScore').value) || 100,
+    grade: $('#eGrade').value,
+    notes: $('#eNotes').value.trim(),
+    photos: editingExamPhotos || [],
+    questions: editingExamQuestions.filter(q => q.topicId || q.no),
+  };
+  if (!data.name) { alert('请填写试卷名称'); return; }
+  const idx = state.exams.findIndex(e => e.id === data.id);
+  if (idx >= 0) { data.createdAt = state.exams[idx].createdAt; state.exams[idx] = data; }
+  else { data.createdAt = new Date().toISOString().slice(0, 19); state.exams.push(data); }
+  save(); closeExamModal();
+  renderExamList();
+  alert('✅ 试卷已保存！可点击"同步错题"一键生成错题');
+}
+function deleteExam(id) {
+  if (!confirm('确定删除这份试卷吗？错题库中的记录不会被删除。')) return;
+  state.exams = state.exams.filter(e => e.id !== id); save(); renderExamList();
+}
+
+/* ========= 试卷详情 + 自动错题同步 ========= */
+function showExamDetailView(id) {
+  const e = state.exams.find(x => x.id === id);
+  if (!e) return;
+  showExamDetail();
+  const totalGot = e.questions.reduce((s, q) => s + Number(q.myScore || 0), 0);
+  const totalFull = e.questions.reduce((s, q) => s + Number(q.fullScore || 0), 0);
+  const pct = totalFull > 0 ? Math.round(totalGot / totalFull * 100) : 0;
+  const wrongs = e.questions.filter(q => q.myScore !== null && q.myScore < q.fullScore);
+  const empties = e.questions.filter(q => q.myScore === null);
+
+  // 模块统计
+  const modStats = {};
+  e.questions.forEach(q => {
+    if (!q.moduleId) return;
+    if (!modStats[q.moduleId]) modStats[q.moduleId] = { got: 0, full: 0, wrong: 0, total: 0 };
+    modStats[q.moduleId].got += Number(q.myScore || 0);
+    modStats[q.moduleId].full += Number(q.fullScore || 0);
+    modStats[q.moduleId].wrong += (q.myScore !== null && q.myScore < q.fullScore) ? 1 : 0;
+    modStats[q.moduleId].total += 1;
+  });
+
+  $('#examDetailCard').innerHTML = `
+    <h2>📝 ${e.name}</h2>
+    <p style="color:var(--text-light);font-size:13px;margin-bottom:14px;">
+      ${e.date} · ${e.grade} · 满分 ${e.fullScore} · 得分 <strong style="color:var(--primary);">${totalGot}/${totalFull} (${pct}%)</strong>
+      ${wrongs.length > 0 ? ` · <span style="color:var(--danger);">${wrongs.length} 题错</span>` : ' · <span style="color:var(--success);">全部正确！</span>'}
+    </p>
+
+    ${Object.keys(modStats).length > 0 ? `
+    <h3 style="margin:16px 0 10px;">📊 模块得分</h3>
+    ${Object.entries(modStats).map(([mid, s]) => {
+      const m = KNOWLEDGE.find(x => x.id === mid);
+      const p = s.full > 0 ? Math.round(s.got / s.full * 100) : 0;
+      return `
+      <div class="progress-row">
+        <label>${m?.name || mid} (${s.wrong}错/${s.total}题)</label>
+        <div class="progress-bar"><div class="progress-fill ${p >= 80 ? 'high' : p >= 60 ? 'med' : 'low'}" style="width:${p}%"></div></div>
+        <div class="pct">${s.got}/${s.full}</div>
+      </div>`;
+    }).join('')}` : ''}
+
+    <h3 style="margin:18px 0 10px;">❌ 错题详情（${wrongs.length} 题）</h3>
+    ${wrongs.length === 0 ? '<div class="empty-state" style="padding:20px;"><div class="icon">🎉</div>太棒了！这次没有错题</div>' : wrongs.map(q => {
+      const mod = KNOWLEDGE.find(m => m.topics.some(t => t.id === q.topicId));
+      const topic = mod?.topics.find(t => t.id === q.topicId);
+      return `
+      <div class="list-item" style="border-left:4px solid var(--danger);">
+        <div class="list-item-header">
+          <div>
+            <strong>第 ${q.no || '—'} 题</strong>
+            <span class="tag tag-${mod?.color || 'basic'}" style="margin-left:6px;">${mod?.name || ''}</span>
+          </div>
+          <span style="color:var(--danger);font-weight:600;">❌ ${q.myScore}/${q.fullScore}</span>
+        </div>
+        <div class="list-item-body">
+          <div>📌 <strong>${topic?.qType || q.topicId || '未分类'}</strong></div>
+          ${topic?.reason ? `<div style="color:var(--danger);">⚠️ 错因：${topic.reason}</div>` : ''}
+          ${topic?.solutions ? `<div style="margin-top:6px;">📋 建议：${topic.solutions.slice(0, 2).join('；')}</div>` : ''}
+        </div>
+      </div>`;
+    }).join('')}
+
+    ${empties.length > 0 ? `
+    <h3 style="margin:18px 0 10px;color:var(--text-light);">⏳ 未评分（${empties.length} 题）</h3>
+    <div style="font-size:13px;color:var(--text-light);">${empties.map(q => `第${q.no || '—'}题 ${q.topicId || ''}`).join('、')}</div>` : ''}
+
+    ${e.photos && e.photos.length > 0 ? `
+    <h3 style="margin:18px 0 10px;">📷 试卷照片（${e.photos.length} 张）</h3>
+    <div class="exam-photo-grid">
+      ${e.photos.map(p => `
+        <div class="photo-item" onclick="openLightbox('${p.data.replace(/'/g, "%27")}')" title="点击放大">
+          <img src="${p.data}" alt="${p.name}">
+        </div>
+      `).join('')}
+    </div>` : ''}
+
+    ${e.notes ? `
+    <h3 style="margin:18px 0 10px;">📝 备注</h3>
+    <div style="font-size:13px;color:var(--text);white-space:pre-wrap;background:#f7fafc;padding:10px;border-radius:4px;">${e.notes}</div>` : ''}
+
+    <div style="margin-top:20px;display:flex;gap:10px;">
+      <button class="btn btn-primary" onclick='autoSyncExamToMistakes("${e.id}")'>🔄 一键同步错题到复盘</button>
+      <button class="btn btn-outline" onclick='generatePlanFromExam("${e.id}")'>🗓️ 根据试卷生成学习计划</button>
+    </div>
+  `;
+}
+
+function autoSyncExamToMistakes(examId) {
+  const e = state.exams.find(x => x.id === examId);
+  if (!e) return;
+  const wrongs = e.questions.filter(q => q.myScore !== null && q.myScore < q.fullScore && q.topicId);
+  if (wrongs.length === 0) { alert('这张试卷没有错题需要同步！'); return; }
+
+  // 试卷有照片 → 自动关联给每个错题
+  const examPhotos = (e.photos && e.photos.length > 0) ? [...e.photos] : [];
+
+  let added = 0, skip = 0, withPhoto = 0;
+  wrongs.forEach(q => {
+    const exist = state.mistakes.find(m => m.topicId === q.topicId && m.status !== 'ok');
+    if (exist) {
+      exist.status = 'weak';
+      exist.examId = examId;
+      // 试卷有照片 && 错题还没自己的照片 → 自动补上试卷照片
+      if (examPhotos.length > 0 && (!exist.photos || exist.photos.length === 0)) {
+        exist.photos = examPhotos;
+        withPhoto++;
+      }
+      if (!exist.source || !exist.source.includes(e.name)) {
+        exist.source = exist.source ? exist.source + '、' + e.name : e.name;
+      }
+      skip++;
+    } else {
+      const topic = KNOWLEDGE.flatMap(m => m.topics).find(t => t.id === q.topicId);
+      const newMistake = {
+        id: uid(),
+        moduleId: q.moduleId,
+        topicId: q.topicId,
+        source: `${e.name} 第${q.no}题`,
+        reason: topic?.reason || q.reason || '知识点未掌握',
+        content: `得分 ${q.myScore}/${q.fullScore}`,
+        reflection: '',
+        status: 'weak',
+        examId: examId,
+        createdAt: new Date().toISOString().slice(0, 19),
+      };
+      if (examPhotos.length > 0) {
+        newMistake.photos = examPhotos;
+        withPhoto++;
+      }
+      state.mistakes.push(newMistake);
+      added++;
+    }
+  });
+  save();
+  const photoMsg = examPhotos.length > 0
+    ? `（${withPhoto} 条已自动带上试卷的 ${examPhotos.length} 张照片 📷）`
+    : '';
+  alert(`✅ 同步完成！新增 ${added} 条错题，${skip} 条已存在的错题已更新。${photoMsg}\n点击"错题复盘"查看。`);
+  renderExamList();
+}
+
+function generatePlanFromExam(examId) {
+  autoSyncExamToMistakes(examId);
+  const e = state.exams.find(x => x.id === examId);
+  const wrongs = e.questions.filter(q => q.myScore !== null && q.myScore < q.fullScore && q.topicId);
+  if (wrongs.length === 0) return;
+
+  // 清空旧计划
+  state.plans = [];
+  let dayOffset = 0;
+  wrongs.forEach(q => {
+    const topic = KNOWLEDGE.flatMap(m => m.topics).find(t => t.id === q.topicId);
+    const solutions = topic?.solutions || ['复习错题', '做同类题目'];
+    const date = daysLater(dayOffset);
+    solutions.slice(0, 2).forEach((sol, idx) => {
+      state.plans.push({
+        id: uid(),
+        task: `📌 第${q.no}题 ${topic?.qType || q.topicId}：${sol.replace(/<[^>]+>/g, '')}`,
+        moduleId: q.moduleId,
+        date,
+        done: false,
+      });
+    });
+    dayOffset = (dayOffset + 1) % 7;
+  });
+  // 通用任务
+  state.plans.push({ id: uid(), task: '📝 复习本次试卷所有错题（20分钟）', moduleId: 'basic', date: daysLater(0), done: false });
+  state.plans.push({ id: uid(), task: '📝 重做本次试卷错题', moduleId: 'basic', date: daysLater(7), done: false });
+  save();
+  alert(`✅ 已根据 ${e.name} 生成 ${state.plans.length} 天的学习计划！\n点击"学习计划"查看。`);
+}
+
+/* ============== 初始化 ============== */
+document.addEventListener('DOMContentLoaded', () => {
+  renderDashboard();
+  renderKnowledge();
+  renderMistakes();
+  renderPlan();
+  renderParent();
+});
+</script>
+</body>
+</html>
